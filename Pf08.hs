@@ -247,7 +247,7 @@ nb2n :: NBin -> N​
 --hago un ej [I,I,O,O,I] = S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S Z)  
 
 nb2n nbin = int2N (evalNB nbin)
-
+{--
 n2nb :: N -> NBin
 --que describe la representación binaria
 --normalizada dada por el tipo ​NBin correspondiente al número
@@ -259,7 +259,7 @@ n2nb n = (evalN n)
 
 --n2nb [] = ...
 --n2nb (db:dbs) = .. n2nb dbs
-
+--}
 
 
 -------------------------------------------------
@@ -269,12 +269,12 @@ n2nb n = (evalN n)
 
 data ExpA = Cte Int
             | Suma ExpA ExpA
-            | Prod ExpA ExpA
-
+            | Prod ExpA ExpA deriving Show
+{--
 f (Cte n) = ...
 f (Suma exp1 exp2) = ... f exp1 f exp2
 f (Prod exp1 exp2) = ... f exp1 f exp2
-
+--}
 evalExpA :: ExpA -> Int
 --​, que describe el número que resulta
 --de evaluar la cuenta representada por la expresión aritmética dada.
@@ -301,7 +301,7 @@ simpProd (Cte 1) exp2 = exp2
 simpProd exp1 (Cte 1) = exp1
 simpProd (Cte 0) _ = Cte 0
 simpProd _ (Cte 0) = Cte 0
-simpProd exp1 exp2 = Prod (exp1 exp2)
+simpProd exp1 exp2 = (Prod exp1 exp2)
 
 cantidadDeSumaCero :: ExpA -> Int​
 --, que describe la cantidad
@@ -322,11 +322,13 @@ sumarSiAlgunaEsCero _ _ = 0
 data ExpS = CteS N
             | SumS ExpS ExpS
             | ProdS ExpS ExpS
-
+{--
 f (CteS n) = ...
 f (SumS exp1 exp2) = ... f exp1 f exp2
 f (ProdS exp1 exp2) = ... f exp1 f exp2
+--}
 
+{--
 evalES :: ExpS -> Int​
 --, que describe el número que resulta de
 --evaluar la cuenta representada por la expresión aritmética dada.
@@ -348,3 +350,4 @@ expA2es :: ExpA -> ExpS
 f (CteS n) = ...
 f (SumS exp1 exp2) = ... f exp1 f exp2
 f (ProdS exp1 exp2) = ... f exp1 f exp2
+--}
