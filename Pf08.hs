@@ -346,6 +346,6 @@ es2ExpA (ProdS exp1 exp2) = Prod (es2ExpA exp1) (es2ExpA exp2)
 expA2es :: ExpA -> ExpS
 --​, que describe una expresión
 --aritmética representada con el tipo ​ExpS​, que tiene el mismo
-expA2es (CteS n) = CteS (int2N n)
+expA2es (Cte n) = CteS (int2N n)
 expA2es (Suma expa1 expa2) = SumS (expA2es expa1) (expA2es expa2)
 expA2es (Prod expa1 expa2) = ProdS (expA2es expa1) (expA2es expa2)

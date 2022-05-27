@@ -176,11 +176,151 @@ elemDeMasLarga xs ys = if (length xs > length ys) then xs else ys
 
 todosLosCaminos :: Tree a -> [[a]]
 todosLosCaminos EmptyT = []
-todosLosCaminos (NodeT x t1 t2) = agregarActual x (todosLosCaminos t1) (todosLosCaminos t2)
+todosLosCaminos (NodeT x EmptyT EmptyT) = [[x]]
+todosLosCaminos (NodeT x t1 t2) = agregarActual x (todosLosCaminos t1 ++ todosLosCaminos t2)
 
 --, que describe la lista
 --con todos los caminos existentes en el árbol dado.
 
-agregarActual :: a -> [[a]] -> [[a]] -> [[a]]
---agregarActual e [] = [[e]]
-agregarActual e (x:xs) (y:ys) = (e : x : [e] ++ xs) ++ (e : y : [e] ++ ys)
+agregarActual :: a -> [[a]] -> [[a]]
+agregarActual e [] = []
+agregarActual e (x:xs) = (e : x) : agregarActual e xs
+
+--------------------------------------Ejercicio 4)-------------------
+
+data AppList a = Single a
+                | Append (AppList a) (AppList a) deriving Show
+{--
+f :: AppList a -> b 
+f (Single x) = ...
+f (Append ap1 ap2) = ... f ap1 f ap2
+
+(Append (Single 5) (Append (Single 5) (Append (Single 8) (Append (Single 1) (Append (Single 0) (Append (Single 3) (Single 7)))))))
+--}
+
+lenAL :: AppList a -> Int--, que describe la cantidad de elementos de la lista.
+lenAL (Single x) = 1
+lenAL (Append ap1 ap2) = (lenAL ap1) + (lenAL ap2)
+
+consAL :: a -> AppList a -> AppList a--, que describe la lista resultante de agregar el elemento dado al principio de la lista dada.
+consAL e (Single x) = Append (Single e) (Single x)
+consAL e (Append ap1 ap2) = Append (Single e) (Append ap1 ap2)
+
+headAL :: AppList a -> a--, que describe el primer elemento de la lista dada.
+headAL (Single x) = x
+headAL (Append ap1 ap2) = headAL ap1
+
+tailAL :: AppList a -> AppList a--, que describe la lista resultante de quitar el primer elemento de la lista dada.
+tailAL (Single x) = error "la representacion no admite lista sin elementos"
+tailAL (Append ap1 ap2) = ap2
+
+snocAL :: a -> AppList a -> AppList a--, que describe la lista resultante de agregar el elemento dado al final de la lista dada.
+snocAL e (Single x) = Append (Single x) (Single e)
+snocAL e (Append ap1 ap2) = Append ap1 (snocAL e ap2)
+
+lastAL :: AppList a -> a--, que describe el último elemento de la lista dada.
+lastAL (Single x) = x
+lastAL (Append ap1 ap2) = lastAL ap2
+
+initAL :: AppList a -> AppList a--, que describe la lista dada sin su último elemento.
+initAL (Single x) = error "la representacion no admite lista sin elementos"
+initAL (Append ap1 (Single x)) = ap1
+initAL (Append ap1 ap2) = Append ap1 (initAL ap2)
+
+reverseAL :: AppList a -> AppList a--, que describe la lista dada con sus elementos en orden inverso.
+reverseAL (Single x) = (Single x)
+reverseAL (Append (Single x) ap2) = snocAL x (reverseAL ap2)
+
+elemAL :: Eq a => a -> AppList a -> Bool--, que indica si el elemento dado se encuentra en la lista dada.
+elemAL e (Single x) = e == x
+elemAL e (Append ap1 ap2) = elemAL e ap1 || elemAL e ap2
+
+appendAL :: AppList a -> AppList a -> AppList a--, que describe el resultado de agregar los elementos de la primera lista adelante de los elementos de la segunda.00
+appendAL (Single x) app2 = Append (Single x) app2
+appendAL (Append ap1 ap2) app2 = Append ap1 (appendAL ap2 app2)
+--NOTA: buscar la manera más eficiente de hacerlo.
+
+appListToList :: AppList a -> [a]--, que describe la representación lineal de la lista dada.
+appListToList (Single x) = [x]
+appListToList (Append (Single x) ap2) = x : appListToList ap2                
+--------------------------------------Ejercicio 5)-------------------
+
+data QuadTree a = LeafQ a
+                | NodeQ (QuadTree a) (QuadTree a) 
+                        (QuadTree a) (QuadTree a) deriving Show
+data Color = RGB Int Int Int deriving Show
+type Image = QuadTree Color
+{--
+f :: QuadTree a -> b
+f (LeafQ a) = b 
+f (NodeQ q1 q2 q3 q4) = f q1 f q2 f q3 f q4 
+
+(NodeQ (NodeQ (LeafQ (RGB 3 2 0)) (LeafQ (RGB 5 3 0)) (LeafQ (RGB 5 9 8)) (LeafQ (RGB 56 6 6))) (NodeQ (LeafQ (RGB 9 8 3)) (LeafQ (RGB 9 9 6)) (LeafQ (RGB 98 89 9)) (LeafQ (RGB 9 6 6))) (NodeQ (LeafQ (RGB 9 6 6)) (LeafQ (RGB 6 6 6)) (LeafQ (RGB 6 89 6)) (LeafQ (RGB 6 8 6))) (NodeQ (NodeQ (LeafQ (RGB 3 9 3)) (LeafQ (RGB 3 9 3)) (LeafQ (RGB 3 9 3)) (LeafQ (RGB 3 9 3))) (LeafQ (RGB 3 9 3)) (LeafQ (RGB 3 9 3)) (LeafQ (RGB 3 5 3))))
+
+(NodeQ 
+    (NodeQ 
+        (LeafQ (RGB 3 2 0))
+        (LeafQ (RGB 5 3 0))
+        (LeafQ (RGB 5 9 8))
+        (LeafQ (RGB 56 6 6)))
+    (NodeQ 
+        (LeafQ (RGB 9 8 3))
+        (LeafQ (RGB 9 9 6))
+        (LeafQ (RGB 98 89 9))
+        (LeafQ (RGB 9 6 6)))
+    (NodeQ 
+        (LeafQ (RGB 9 6 6))
+        (LeafQ (RGB 6 6 6))
+        (LeafQ (RGB 6 89 6))
+        (LeafQ (RGB 6 8 6)))
+    (NodeQ 
+        (NodeQ 
+            (LeafQ (RGB 3 9 3))
+            (LeafQ (RGB 3 9 3))
+            (LeafQ (RGB 3 9 3))
+            (LeafQ (RGB 3 9 3))) 
+        (LeafQ (RGB 8 6 6))
+        (LeafQ (RGB 3 9 3))
+        (LeafQ (RGB 3 5 3))))
+--}
+
+heightQT :: QuadTree a -> Int--, que describe la altura del árbol dado.
+heightQT (LeafQ color) = 0 
+heightQT (NodeQ q1 q2 q3 q4) = 1 + (heightQT q1) `max` (heightQT q2) `max` (heightQT q3) `max` (heightQT q4) 
+
+countLeavesQT :: QuadTree a -> Int--, que describe la cantidad de hojas del árbol dado.
+countLeavesQT (LeafQ color) = 1 
+countLeavesQT (NodeQ q1 q2 q3 q4) = (countLeavesQT q1) + (countLeavesQT q2) + (countLeavesQT q3) + (countLeavesQT q4) 
+
+sizeQT :: QuadTree a -> Int--, que describe la cantidad de constructores del árbol dado.
+sizeQT (LeafQ color) = 1 
+sizeQT (NodeQ q1 q2 q3 q4) = 1 + (sizeQT q1) + (sizeQT q2) + (sizeQT q3) + (sizeQT q4)
+
+compress :: QuadTree Color -> QuadTree Color--, que describe el árbol resultante de transformar en hoja todos aquellos nodos para los
+--que se cumpla que todos los elementos de sus subárboles son iguales.
+compress (LeafQ color) = LeafQ color
+compress (NodeQ (LeafQ c1) (LeafQ c2) (LeafQ c3) (LeafQ c4)) = if (hojasIguales c1 c2 c3 c4) 
+                                                                then LeafQ c1 
+                                                                else (NodeQ (LeafQ c1) (LeafQ c2) (LeafQ c3) (LeafQ c4))    
+compress (NodeQ q1 q2 q3 q4) = NodeQ (compress q1) (compress q2) (compress q3) (compress q4) 
+
+hojasIguales :: Color -> Color -> Color -> Color -> Bool
+hojasIguales (RGB c1 c2 c3) (RGB c4 c5 c6) (RGB c7 c8 c9) (RGB  c10 c11 c12) = numerosIguales c1 c4 c7 c10 
+                                                                                && numerosIguales c2 c5 c8 c11 
+                                                                                && numerosIguales c3 c6 c9 c12
+numerosIguales :: Int -> Int -> Int -> Int -> Bool   
+numerosIguales n1 n2 n3 n4 = n1 == n2 && n2 == n3 && n3 == n4
+{--
+uncompress :: QuadTree a -> QuadTree a--, que describe el árbol resultante de transformar en nodo (manteniendo el dato de la
+--hoja correspondiente) todas aquellas hojas que no se encuentren en el nivel de la altura del árbol.
+uncompress (LeafQ a) = LeafQ a 
+uncompress (NodeQ q1 q2 q3 q4) = uncompress q1 uncompress q2 uncompress q3 uncompress q4 
+
+
+render :: Image -> Int -> Image--, que describe la imagen dada en el tamaño dado.
+--Precondición: el tamaño dado es potencia de 4 y su raíz cuarta es mayor o igual a la altura del árbol dado.
+--NOTA: Una imagen tiene tamaño t cuando todas las hojas se encuentran en el nivel ∜t.
+--AYUDA: Esta operación es similar a uncompress, pero pudiendo variar la altura del árbol
+f (LeafQ a) = b 
+f (NodeQ q1 q2 q3 q4) = f q1 f q2 f q3 f q4 
+--}
