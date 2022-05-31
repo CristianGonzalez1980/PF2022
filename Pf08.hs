@@ -177,13 +177,8 @@ f (db:dbs) = .. f dbs
 
 evalNB :: NBin -> Int
 --​que describe el número representado por el elemento dado.
-evalNB nbin = evalNBreverse (reverse nbin)
-
-evalNBreverse :: NBin -> Int
---​que describe el número representado por el elemento dado.
-evalNBreverse [] = error "La representacion minima es de un elemento en la lista"
-evalNBreverse [db] = (dbAsInt db) * (2 ^ 0)
-evalNBreverse (db:dbs) = (dbAsInt db) * (2 ^ (length' dbs)) + evalNBreverse dbs
+evalNB [] = 0
+evalNB (db:dbs) = dbAsInt db + 2 * (evalNB dbs)
 
 normalizarNB :: NBin -> NBin​
 --que describe la representación
@@ -194,15 +189,12 @@ normalizarNB :: NBin -> NBin​
 --indica que una lista de dígitos normalizada no puede terminar con el
 --dígito 0.
 
-normalizarNB nbin = reverse (normalizarNBreverse (reverse nbin))
+normalizarNB [] = []
+normalizarNB (db:dbs) = sinCerosALaIzquierda db (normalizarNB dbs)
 
-normalizarNBreverse :: NBin -> NBin​
-normalizarNBreverse [] = []
-normalizarNBreverse (db:dbs) = quitarPrimerosCeros db dbs
-
-quitarPrimerosCeros :: DigBin -> NBin -> NBin 
-quitarPrimerosCeros I nbin = (I : nbin)
-quitarPrimerosCeros _ nbin = normalizarNBreverse nbin
+sinCerosALaIzquierda :: DigBin -> NBin -> NBin 
+sinCerosALaIzquierda O [] = []
+sinCerosALaIzquierda db nbin = db : nbin
 
 succNB :: NBin -> NBin​
 --que describe la representación binaria
@@ -212,13 +204,19 @@ succNB :: NBin -> NBin​
 --precondición que el argumento está normalizado.
 
 --hago un ej [I,O,I,I,O,I] + I = [O,I,I,I,O,I]
-
+{--
+MAL RECURSION MUTUA
 succNB [] = [I]
 succNB (db:dbs) = sumarYAcarrearSi (dbAsBool db) dbs
 
 sumarYAcarrearSi :: Bool -> NBin -> NBin
 sumarYAcarrearSi False dbs = (I : dbs)
 sumarYAcarrearSi True dbs = (O : succNB dbs)   
+--}
+succNB [] = [I]
+succNB (O:dbs) = I:dbs
+succNB (I:dbs) = O:succNB dbs
+--en la demostracion abrir en 3 casos
 
 addNB :: NBin -> NBin -> NBin​
 --que describe la representación binaria normalizada de la suma de los números
@@ -230,14 +228,14 @@ addNB :: NBin -> NBin -> NBin​
 --hago un ej [I,O,I,I,O,I] + [O,I,I,I,O,I] = [I,I,O,I,I,O,I] 
 
 addNB [] db2 = []
-addNB db [] = []
-addNB (db:dbs) (db2:db2s) = sumar2Nbin db db2 dbs db2s
+addNB db [] = db
+addNB [] db2 = db2
+addNB (db:dbs) (db2:db2s) = addB db db2 (addNB dbs db2s) 
 
-sumar2Nbin :: DigBin -> DigBin -> NBin -> NBin -> NBin
-sumar2Nbin O O nb1 nb2 = (O : (addNB nb1 nb2))
-sumar2Nbin I I nb1 nb2 = (O : (succNB(addNB nb1 nb2)))
-sumar2Nbin _ _ nb1 nb2 = (I : (addNB nb1 nb2))
-
+addB :: DigBin -> DigBin -> NBin -> NBin
+addB O O rs = O : rs
+addB I I rs = O : (succNB rs)
+addB d1 d2 rs = I : rs
 
 nb2n :: NBin -> N​
 --que describe la representación unaria dada
@@ -246,7 +244,13 @@ nb2n :: NBin -> N​
 
 --hago un ej [I,I,O,O,I] = S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S Z)  
 
-nb2n nbin = int2N (evalNB nbin)
+nb2n [] = Z
+nb2n (d:dbs) = addN (db2n d) (prodN (S (S Z)) (nb2n dbs))
+
+db2n :: DigBin -> N
+db2n O = Z
+db2n I = S Z
+
 {--
 n2nb :: N -> NBin
 --que describe la representación binaria
@@ -254,13 +258,9 @@ n2nb :: N -> NBin
 --representado por el argumento.
 
 --hago un ej S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S Z) = [I,I,O,I]  
-
-n2nb n = (evalN n)
-
---n2nb [] = ...
---n2nb (db:dbs) = .. n2nb dbs
 --}
-
+n2nb Z = []
+n2nb (S n) = succNB (n2nb n)
 
 -------------------------------------------------
 --seccion III

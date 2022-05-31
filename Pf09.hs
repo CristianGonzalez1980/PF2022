@@ -92,13 +92,13 @@ f (NodeT x t1 t2) = ...(f t1) ... (f t2)
 
 sumarT :: Tree Int -> Int
 sumarT EmptyT = 0
-sumarT (NodeT x t1 t2) = x + (sumarT t1) + (sumarT t2)
+sumarT (NodeT x t1 t2) = x + sumarT t1 + sumarT t2
 --, que describe el número resultante
 --de sumar todos los números en el árbol dado.
 
 sizeT :: Tree a -> Int
 sizeT EmptyT = 0
-sizeT (NodeT x t1 t2) = 1 + (sizeT t1) + (sizeT t2)
+sizeT (NodeT x t1 t2) = 1 + sizeT t1 + sizeT t2
 --, que describe la cantidad de elementos
 --en el árbol dado.
 
@@ -120,14 +120,15 @@ unoSiP True = 1
 unoSiP _ = 0
 
 countLeaves :: Tree a -> Int
-countLeaves EmptyT = 1
+countLeaves EmptyT = 0
+countLeaves (NodeT x EmptyT EmptyT) = 1
 countLeaves (NodeT x t1 t2) = countLeaves t1 + countLeaves t2
 --, que describe la cantidad de
 --hojas del árbol dado.
 
 heightT :: Tree a -> Int
 heightT EmptyT = 0
-heightT (NodeT x t1 t2) = 1 + ((heightT t1) `max` (heightT t2))
+heightT (NodeT x t1 t2) = 1 + max (heightT t1) (heightT t2)
 --, que describe la altura del árbol
 --dado.
 
