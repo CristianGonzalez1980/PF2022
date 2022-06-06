@@ -1,5 +1,5 @@
 
-module Pf01 where
+module PF01 where
 
 
 --ejercicio 1

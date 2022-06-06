@@ -205,7 +205,8 @@ lenAL (Append ap1 ap2) = (lenAL ap1) + (lenAL ap2)
 
 consAL :: a -> AppList a -> AppList a--, que describe la lista resultante de agregar el elemento dado al principio de la lista dada.
 consAL e (Single x) = Append (Single e) (Single x)
-consAL e (Append ap1 ap2) = Append (Single e) (Append ap1 ap2)
+consAL e (Append ap1 ap2) = Append (consAL e ap1) ap2
+--consAL e (Append ap1 ap2) = Append (Single e) (Append ap1 ap2)
 
 headAL :: AppList a -> a--, que describe el primer elemento de la lista dada.
 headAL (Single x) = x
@@ -213,11 +214,13 @@ headAL (Append ap1 ap2) = headAL ap1
 
 tailAL :: AppList a -> AppList a--, que describe la lista resultante de quitar el primer elemento de la lista dada.
 tailAL (Single x) = error "la representacion no admite lista sin elementos"
-tailAL (Append ap1 ap2) = ap2
+tailAL (Append (Single x) ap2) = ap2
+tailAL (Append ap1 ap2) = Append (tailAL ap1) ap2
 
 snocAL :: a -> AppList a -> AppList a--, que describe la lista resultante de agregar el elemento dado al final de la lista dada.
 snocAL e (Single x) = Append (Single x) (Single e)
 snocAL e (Append ap1 ap2) = Append ap1 (snocAL e ap2)
+--snocAL e (Append ap1 ap2) = Append ap1 (Append ap2 (Single e))
 
 lastAL :: AppList a -> a--, que describe el último elemento de la lista dada.
 lastAL (Single x) = x
@@ -230,7 +233,8 @@ initAL (Append ap1 ap2) = Append ap1 (initAL ap2)
 
 reverseAL :: AppList a -> AppList a--, que describe la lista dada con sus elementos en orden inverso.
 reverseAL (Single x) = (Single x)
-reverseAL (Append (Single x) ap2) = snocAL x (reverseAL ap2)
+--reverseAL (Append (Single x) ap2) = snocAL x (reverseAL ap2)
+reverseAL (Append ap1 ap2) = Append (reverseAL ap2) (reverseAL ap1)
 
 elemAL :: Eq a => a -> AppList a -> Bool--, que indica si el elemento dado se encuentra en la lista dada.
 elemAL e (Single x) = e == x
@@ -240,10 +244,13 @@ appendAL :: AppList a -> AppList a -> AppList a--, que describe el resultado de 
 appendAL (Single x) app2 = Append (Single x) app2
 appendAL (Append ap1 ap2) app2 = Append ap1 (appendAL ap2 app2)
 --NOTA: buscar la manera más eficiente de hacerlo.
+--appendAL ap1 ap2 = Append ap1 ap2
 
 appListToList :: AppList a -> [a]--, que describe la representación lineal de la lista dada.
 appListToList (Single x) = [x]
-appListToList (Append (Single x) ap2) = x : appListToList ap2                
+--appListToList (Append (Single x) ap2) = x : appListToList ap2                
+appListToList (Append ap1 ap2) = appListToList ap1 ++ appListToList ap2                
+
 --------------------------------------Ejercicio 5)-------------------
 
 data QuadTree a = LeafQ a

@@ -1,4 +1,4 @@
-module Pf02 where 
+module PF02 where 
 
     first (x,y) = x
     

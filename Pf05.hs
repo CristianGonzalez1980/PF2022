@@ -1,6 +1,6 @@
 module Pf05 where
-import Pf03 hiding (uncurry)
-import Pf02
+
+--import Pf03 hiding (uncurry)
 
 data Gusto = Chocolate | DulceDeLeche | Frutilla | Sambayon
 

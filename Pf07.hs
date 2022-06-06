@@ -1,4 +1,5 @@
 module Pf07 where
+
 import Pf05
 
 --I
@@ -65,11 +66,11 @@ quitarQueso i p = Capa i p
 --e.
 aptaIntolerantesLactosa :: Pizza -> Bool
 aptaIntolerantesLactosa Prepizza = True
-aptaIntolerantesLactosa (Capa i p) = noEsQueso i && (aptaIntolerantesLactosa p)
+aptaIntolerantesLactosa (Capa i p) = not (esQueso i) && (aptaIntolerantesLactosa p)
 
-noEsQueso :: Ingrediente -> Bool-- usar not (esQueso)
-noEsQueso Queso = False
-noEsQueso _ = True
+esQueso :: Ingrediente -> Bool-- usar not (esQueso)
+esQueso Queso = True
+esQueso _ = False
 
 --VER PROPIEDAD
 
@@ -180,7 +181,7 @@ cantidadDePuntosInteresantes (Bifurcacion m d1 d2) = 1 + cantidadDePuntosInteres
 cantidadDePuntosInteresantes :: Dungeon a -> Int
 cantidadDePuntosInteresantes (Habitacion x) = 1
 cantidadDePuntosInteresantes (Pasaje m d) = uniSiInt m + cantidadDePuntosInteresantes d
-cantidadDePuntosInteresantes (Bifurcacion m d1 d2) = 1uniSiInt m + cantidadDePuntosInteresantes d1 + cantidadDePuntosInteresantes d2
+cantidadDePuntosInteresantes (Bifurcacion m d1 d2) = uniSiInt m + cantidadDePuntosInteresantes d1 + cantidadDePuntosInteresantes d2
 
 uniSiInt :: Maybe a -> Int
 uniSiInt Nothing = 0
@@ -195,7 +196,7 @@ puntoVacio :: Maybe a -> Int
 puntoVacio Nothing = 1
 puntoVacio _ = 0
 
-cantidadDePuntosCon :: a -> Dungeon a -> Int
+cantidadDePuntosCon :: Eq a => a -> Dungeon a -> Int
 cantidadDePuntosCon element (Habitacion x) = cuentaSiEsBuscado element x
 cantidadDePuntosCon element (Pasaje m d) = cuentaSiEsBuscadoMaybe element m + cantidadDePuntosCon element d
 cantidadDePuntosCon element (Bifurcacion m d1 d2) = cuentaSiEsBuscadoMaybe element m + cantidadDePuntosCon element d1 + cantidadDePuntosCon element d2
@@ -212,22 +213,22 @@ esLineal :: Dungeon a -> Bool
 esLineal (Habitacion a) = True
 esLineal (Pasaje m d) = esLineal d
 esLineal (Bifurcacion m d1 d2) = False
-
-llenoDe :: Eq a => a -> Dungeon a -> Bool
+{--
+llenoDe :: a -> Dungeon a -> Bool
 llenoDe element (Habitacion x) = esBuscado element x
-llenoDe element (Pasaje m d) = esBuscadoMaybe element m && llenoDe element d
-llenoDe element (Bifurcacion m d1 d2) = esBuscadoMaybe element m && llenoDe element d1 && llenoDe elem d2
-
+llenoDe element (Pasaje m d) = (esBuscadoMaybe element m) && (llenoDe element d)
+llenoDe element (Bifurcacion m d1 d2) = (esBuscadoMaybe element m) && (llenoDe element d1) && (llenoDe elem d2)
+--}
 esBuscado :: Eq a => a -> a -> Bool
 esBuscado x y = x == y
 
-esBuscadoMaybe :: a -> Maybe a -> Bool
+esBuscadoMaybe :: Eq a => a -> Maybe a -> Bool
 esBuscadoMaybe x (Nothing) = False
 esBuscadoMaybe x (Just y) = esBuscado x y
 
-data Tesoro = Cofre | Oro | Joyas
+data Tesoro = Cofre | Oro | Joyas deriving Eq
 
-data VariasCosas a b = Objeto a | Criatura b
+data VariasCosas a b = Objeto a | Criatura b 
 
-data Monstruo = Gargola | Dragon | Troll
+data Monstruo = Gargola | Dragon | Troll deriving Eq
 

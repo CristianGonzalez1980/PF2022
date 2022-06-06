@@ -1,6 +1,8 @@
 module Pf08 where
 
+import Pf07
 import Pf05
+
 {--
 f :: [a] -> b
 f [] = ...
