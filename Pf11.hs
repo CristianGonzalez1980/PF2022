@@ -122,9 +122,100 @@ recr z f (x:xs) = f x xs (recr z f xs)
 foldr1 :: (a -> a -> a) -> [a] -> a
 foldr1 = undefined
 
-zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith = undefined
+zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith' = undefined
 
 --(Desafío)
+scanr' :: (a -> b -> b) -> b -> [a] -> [b]
+scanr' = undefined
+
+--Ejercicio 9) Definir las siguientes funciones utilizando solamente ​foldr​:
+sum :: [Int] -> Int
+sum = foldr (\x b -> x + b) 0
+--sum = foldr (+) 0 
+
+length :: [a] -> Int
+length = foldr (\x b -> 1 + b) 0
+--length = foldr ((+) . (\x -> 1)) 0
+
+map :: (a -> b) -> [a] -> [b]
+map f = foldr (\x b -> f x : b) []
+--map f = foldr ((:) . f) []
+
+filter :: (a -> Bool) -> [a] -> [a]
+filter f = foldr (\x b -> if f x then x : b 
+                                    else b) []
+
+find :: (a -> Bool) -> [a] -> Maybe a
+find f = foldr (\x b -> if f x then Just x
+                                    else b) Nothing 
+
+any :: (a -> Bool) -> [a] -> Bool
+any f = foldr (\x b -> f x || b) False
+
+all :: (a -> Bool) -> [a] -> Bool
+all f = foldr (\x b -> f x && b) True
+
+countBy :: (a -> Bool) -> [a] -> Int
+countBy f = foldr (\x b -> if f x then succ b
+                                    else b) 0
+
+partition :: (a -> Bool) -> [a] -> ([a], [a])
+partition f = foldr (\x (ws, zs) -> if f x then (x : ws, zs)
+                                                else (ws, x : zs)) ([],[])
+
+zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith = undefined  
+
 scanr :: (a -> b -> b) -> b -> [a] -> [b]
 scanr = undefined
+
+takeWhile :: (a -> Bool) -> [a] -> [a]
+takeWhile = undefined
+
+take :: Int -> [a] -> [a]
+take = undefined
+
+drop :: Int -> [a] -> [a]
+drop = undefined
+
+(!!) :: Int -> [a] -> a
+(!!) = undefined
+
+twice f x = f (f x)
+
+
+--Ejercicio 10) Indicar cuáles de las siguientes expresiones tienen tipo, y para aquellas
+--que lo tengan, decir cuál es ese tipo:
+
+{--
+
+filter id
+SI :: [Bool] -> [Bool]
+
+map (\x y z -> (x, y, z))
+SI :: [a] -> [b -> c -> (a,b,c)]
+
+map (+)
+SI :: [Int] -> [Int -> Int]
+
+filter fst
+SI :: [(Bool,a)] -> [Bool,a]
+
+filter (flip const (+))
+SI :: [Bool] -> [Bool]
+
+map const
+SI :: [a] -> [b -> a]
+
+map twice
+SI :: [a -> a] -> [a -> a]
+
+foldr twice
+SO :: 
+
+zipWith fst
+
+foldr (\x r z -> (x, z) : r z) (const [])
+
+--}
