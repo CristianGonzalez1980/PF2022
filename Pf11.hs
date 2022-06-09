@@ -123,7 +123,9 @@ foldr1 :: (a -> a -> a) -> [a] -> a
 foldr1 = undefined
 
 zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith' = undefined
+zipWith' f [] ys = []
+zipWith' f xs [] = []
+zipWith' f (x:xs) (y:ys) = f x y : zipWith' f xs ys 
 
 --(Desafío)
 scanr' :: (a -> b -> b) -> b -> [a] -> [b]
@@ -174,13 +176,13 @@ takeWhile :: (a -> Bool) -> [a] -> [a]
 takeWhile = undefined
 
 take :: Int -> [a] -> [a]
-take = undefined
+take = flip (foldr (\x r n -> if n == 0 then [] else x : r (n-1)) (\n -> []))
 
 drop :: Int -> [a] -> [a]
-drop = undefined
+drop = flip (foldr (\x r n -> if n == 0 then x : r n else r (n-1)) (\n -> []))
 
 (!!) :: Int -> [a] -> a
-(!!) = undefined
+(!!) = flip (foldr (\x r n -> if n == 0 then x else r (n-1)) (\n -> error "no existe la posicion"))
 
 twice f x = f (f x)
 
@@ -212,10 +214,11 @@ map twice
 SI :: [a -> a] -> [a -> a]
 
 foldr twice
-SO :: 
+SO :: a -> [a -> a] -> a --MMMMM
 
 zipWith fst
+SO :: a -> [a -> a] -> a --MMMMM
 
 foldr (\x r z -> (x, z) : r z) (const [])
-
+SI :: [a] -> b -> [(a,b)]
 --}
