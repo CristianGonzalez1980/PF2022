@@ -116,3 +116,67 @@ constExpa Mul exp1 exp2 = Prod exp1 exp2
 ea2Arbol' :: EA -> Arbol BinOp Int
 --que describe la representación como elemento del tipo ABTree BinOp Int de la expresión aritmética dada.
 ea2Arbol' = foldEA Hoja (\binop r1 r2 -> Nodo binop r1 r2)
+
+--------------------------------------------------------------------------------------------------------------------
+
+--data Tree a = EmptyT | NodeT a (Tree a) (Tree a)
+--(NodeT 8 (NodeT 9 EmptyT EmptyT) (NodeT 5 EmptyT (NodeT 4 EmptyT EmptyT)))
+
+--a
+
+foldT :: (a -> b -> b -> b) -> b -> Tree a -> b
+foldT f z EmptyT = z
+foldT f z (NodeT x t1 t2) = f x (foldT f z t1) (foldT f z t2)
+
+--b
+
+mapT :: (a -> b) -> Tree a -> Tree b
+mapT f = foldT (\x r1 r2 -> NodeT (f x) r1 r2) EmptyT
+
+sumT :: Tree Int -> Int
+sumT = foldT (\x r1 r2 -> x + r1 + r2) 0
+
+sizeT :: Tree a -> Int
+sizeT = foldT (\x r1 r2 -> 1 + r1 + r2) 0
+
+heightT :: Tree a -> Int
+heightT = foldT (\x r1 r2 -> 1 + max r1 r2) 0
+
+preOrder :: Tree a -> [a]
+preOrder = foldT (\x r1 r2 -> x : (r1 ++ r2)) []
+
+inOrder :: Tree a -> [a]
+inOrder = foldT (\x r1 r2 -> r1 ++ [x] ++ r2) []
+
+postOrder :: Tree a -> [a]
+postOrder = foldT (\x r1 r2 -> r1 ++ r2 ++ [x]) []
+
+mirrorT :: Tree a -> Tree a
+mirrorT = foldT (\x r1 r2 -> NodeT x r2 r1) EmptyT
+
+countByT :: (a -> Bool) -> Tree a -> Int
+countByT f = foldT (\x r1 r2 -> if (f x) then 1 + r1 + r2 else r1 + r2) 0
+
+partitionT :: (a -> Bool) -> Tree a -> ([a], [a])
+partitionT f = foldT (\x r1 r2 -> if (f x) then (x : fst r1 ++ fst r2, snd r1 ++ snd r2) else (fst r1 ++ fst r2, x : snd r1 ++ snd r2)) ([],[])
+
+zipWithT :: (a -> b -> c) -> Tree a -> Tree b -> Tree c
+zipWithT f = foldT g (\t -> EmptyT) 
+             where g x r1 r2 EmptyT = EmptyT
+                   g x r1 r2 (NodeT y t1 t2) = NodeT (f x y) (r1 t1) (r2 t2) 
+
+caminoMasLargo :: Tree a -> [a]
+caminoMasLargo = foldT (\x r1 r2 -> x : (if length r1 > length r2 then r1 else r2) ) []
+
+todosLosCaminos :: Tree a -> [[a]]
+todosLosCaminos = foldT g []
+                  where g x [] [] = [[x]]
+                        g x r1 r2 = agregarActual x (r1 ++ r2)
+
+todosLosNiveles :: Tree a -> [[a]]
+todosLosNiveles = foldT (\x r1 r2 -> [x] : concatenarNiveles r1 r2) []
+
+nivelN :: Tree a -> Int -> [a]
+nivelN = foldT (\x r1 r2 n -> elemDeLevelN n x (r1 (n-1)) (r2 (n-1))) (\n -> [])
+
+--c

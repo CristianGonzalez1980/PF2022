@@ -119,8 +119,9 @@ recr :: b -> (a -> [a] -> b -> b) -> [a] -> b
 recr z f [] = z
 recr z f (x:xs) = f x xs (recr z f xs)
 
-foldr1 :: (a -> a -> a) -> [a] -> a
-foldr1 = undefined
+foldr1' :: (a -> a -> a) -> [a] -> a--caso en funciones como minimo o maximo por ej
+foldr1' f [x] = x
+foldr1' f (x:xs) = f x (foldr1' f xs)
 
 zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
 zipWith' f [] ys = []
@@ -129,7 +130,8 @@ zipWith' f (x:xs) (y:ys) = f x y : zipWith' f xs ys
 
 --(Desafío)
 scanr' :: (a -> b -> b) -> b -> [a] -> [b]
-scanr' = undefined
+scanr' f z [] = [z] 
+scanr' f z (x:xs) = foldr f z (x:xs) : scanr' f z xs
 
 --Ejercicio 9) Definir las siguientes funciones utilizando solamente ​foldr​:
 sum :: [Int] -> Int
@@ -167,13 +169,15 @@ partition f = foldr (\x (ws, zs) -> if f x then (x : ws, zs)
                                                 else (ws, x : zs)) ([],[])
 
 zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith = undefined  
+zipWith f = foldr g (\ys -> [])
+            where g x r [] = []
+                  g x r (y:ys) = f x y : r ys  
 
 scanr :: (a -> b -> b) -> b -> [a] -> [b]
-scanr = undefined
+scanr f z = undefined
 
 takeWhile :: (a -> Bool) -> [a] -> [a]
-takeWhile = undefined
+takeWhile f = foldr (\x r -> if f x then x : r else []) []
 
 take :: Int -> [a] -> [a]
 take = flip (foldr (\x r n -> if n == 0 then [] else x : r (n-1)) (\n -> []))

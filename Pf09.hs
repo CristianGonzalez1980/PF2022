@@ -142,7 +142,7 @@ listPerLevel :: Tree a -> [[a]]
 listPerLevel EmptyT = [] 
 listPerLevel (NodeT x t1 t2) = [x] : concatenarNiveles (listPerLevel t1) (listPerLevel t2)
 
-concatenarNiveles :: [[a]] -> [[a]] ->[[a]]
+concatenarNiveles :: [[a]] -> [[a]] -> [[a]]
 concatenarNiveles [] ys = ys
 concatenarNiveles xs [] = xs
 concatenarNiveles (x:xs) (y:ys) = (x ++ y) : concatenarNiveles xs ys  
