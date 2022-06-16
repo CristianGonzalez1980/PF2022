@@ -133,6 +133,8 @@ scanr' :: (a -> b -> b) -> b -> [a] -> [b]
 scanr' f z [] = [z] 
 scanr' f z (x:xs) = foldr f z (x:xs) : scanr' f z xs
 
+--8 i error de tipado zipWith (curry f) xs ys = map f (zip xs ys)
+
 --Ejercicio 9) Definir las siguientes funciones utilizando solamente ​foldr​:
 sum :: [Int] -> Int
 sum = foldr (\x b -> x + b) 0

@@ -53,8 +53,8 @@ uflip f p = f (swap p)
 {-
 const = \x -> (\y -> x)
 -}
-const :: a -> b -> a
-const x y = x
+const' :: a -> b -> a
+const' x y = x
 
 {-
 compose = \f -> (\g -> (\x -> f (g x)))

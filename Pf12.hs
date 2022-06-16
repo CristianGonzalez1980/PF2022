@@ -2,6 +2,7 @@ module Pf12 where
 
 import Pf09
 import Pf08
+import Pf03
 
 {--
 data ExpA = Cte Int
@@ -180,3 +181,146 @@ nivelN :: Tree a -> Int -> [a]
 nivelN = foldT (\x r1 r2 n -> elemDeLevelN n x (r1 (n-1)) (r2 (n-1))) (\n -> [])
 
 --c
+
+recT :: (a -> Tree a -> Tree a -> b -> b -> b) -> b -> Tree a -> b
+recT f z EmptyT = z
+recT f z (NodeT x t1 t2) = f x t1 t2 (recT f z t1) (recT f z t2)
+
+--d
+
+insertT :: Ord a => a -> Tree a -> Tree a
+--que describe el árbol resultante de insertar el elemento dado en el árbol dado, teniendo en cuenta invariantes de BST.
+insertT e = recT g (NodeT e EmptyT EmptyT)
+            where g x t1 t2 r1 r2 = if e == x then NodeT x t1 t2 
+                                              else if e < x then NodeT x r1 t2 
+                                                             else NodeT x t1 r2
+
+caminoHasta :: Ord a => a -> Tree a -> [a]
+--que describe el camino hasta el elemento dado en el árbol dado.
+--Precondición: existe el elemento en el árbol.
+caminoHasta e = recT g (error "el arbol no puede estar vacio")
+                where g x t1 t2 r1 r2 = if e == x then [x] 
+                                                  else if e < x then x : r1 
+                                                                 else x : r2 
+
+-------------------------------------------------------------------------------------------------------------------------
+
+type Record a b = [(a,b)]
+
+type Table a b = [ Record a b ]
+
+
+select :: (Record a b -> Bool) -> Table a b -> Table a b
+--que a partir de la lista de registros dada describe la lista de los registros que cumplen con la condición dada.
+select p = foldr (\record r -> if p record then record : r else r) []
+
+project :: (a -> Bool) -> Table a b -> Table a b
+--que a partir de la lista de registros dada describe la lista de registros solo con los campos que cumplen la condición dada.
+project p = foldr (\record r -> cuyosCamposCumplen p record : r) []
+
+cuyosCamposCumplen :: (a -> Bool) -> Record a b -> Record a b     
+cuyosCamposCumplen p = foldr (\(x,y) r -> if p x then (x,y) : r else r) []
+
+{--   version explicita
+cuyosCamposCumplen p [] = []
+cuyosCamposCumplen p ((x,y):cs) = if p x then (x,y) : cuyosCamposCumplen p cs
+                                          else cuyosCamposCumplen p cs
+--}
+
+conjunct :: (a -> Bool) -> (a -> Bool) -> a -> Bool
+--que describe el predicado que da True solo cuando los dos predicados dados lo hacen.
+conjunct p q = subst ((&&) . p)  q
+
+crossWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+--que describe el resultado de aplicar una función a cada elemento del producto cartesiano de las dos listas de registros dadas.
+crossWith p = zipWith p
+
+product :: Table a b -> Table a b -> Table a b
+--que describe la lista de registros resultante del producto cartesiano combinado de las dos
+--listas de registros dadas. Es decir la unión de los campos en los registros del producto cartesiano.
+product = undefined
+{--
+similar :: Record a b -> Record a b
+--que describe el registro resultante de descartar datos cuyos campos sean iguales (o sea, el mismo dato asociado al mismo campo).
+similar = foldr (\record r -> if estaEn record r then r else record : r) []
+
+estaEn :: (a,b) -> Record a b -> Bool
+estaEn (x,y) [] = False
+estaEn (x,y) ((w,z):cs) = x == w && y == z || estaEn (x,y) cs
+-- = foldr (\(x,y) r -> ) False
+--}
+
+data Query a b = Table [Record a b] -- Table (Table a b)
+               | Product (Query a b) (Query a b)
+               | Projection (a -> Bool) (Query a b)
+               | Selection (Record a b -> Bool) (Query a b)
+
+{--
+Projection
+ (/= "age")
+ (Selection
+  (\r -> any (\(c,v)-> c == "name"
+                    && v == "Edward Snowden") r)
+(Table [ [("name", "Edward Snowden"),("age", "29")]
+ [("name", "Jason Bourne"), ("age", "40")] ]))
+--}
+
+
+--Ejercicio 6)
+
+data Dir = Left' | Right' | Straight' deriving Show
+data Mapa a = Cofre [a]
+            | Nada (Mapa a)
+            | Bifurcacion [a] (Mapa a) (Mapa a) deriving Show
+--(Nada (Bifurcacion ["y","r"] (Cofre ["a", "g", "h"]) (Nada (Bifurcacion ["l","i"] (Cofre ["h","w","x"]) (Cofre ["b","c"])))))
+
+foldM :: ([a] -> b) -> (b -> b) -> ([a] -> b -> b -> b) -> Mapa a -> b
+foldM f g h (Cofre xs) = f xs
+foldM f g h (Nada mp) = g (foldM f g h mp)
+foldM f g h (Bifurcacion xs mp1 mp2) = h xs (foldM f g h mp1) (foldM f g h mp2) 
+
+recM :: ([a] -> b) -> (Mapa a -> b -> b) -> ([a] -> Mapa a -> Mapa a -> b -> b -> b) -> Mapa a -> b
+recM f g h (Cofre xs) = f xs
+recM f g h (Nada mp) = g mp (recM f g h mp)
+recM f g h (Bifurcacion xs mp1 mp2) = h xs mp1 mp2 (recM f g h mp1) (recM f g h mp2) 
+
+objects :: Mapa a -> [a]
+--que describe la lista de todos los objetos presentes en el mapa dado.
+objects = foldM id id (\xs r1 r2 -> xs ++ r1 ++ r2)
+
+mapM :: (a -> b) -> Mapa a -> Mapa b
+--que transforma los objetos del mapa dado aplicando la función dada.
+mapM f = foldM (Cofre . (map f)) id (\xs r1 r2 -> Bifurcacion (map f xs) r1 r2)  
+
+has :: (a -> Bool) -> Mapa a -> Bool
+--que indica si existe algún objeto que cumpla con la condición dada en el mapa dado.
+has p = foldM (any p) id (\xs b1 b2 -> (||) ((||) (any p xs) b1) b2)
+
+hasObjectAt :: (a->Bool) -> Mapa a -> [Dir] -> Bool
+--que indica si un objeto al final del camino dado cumple con la condición dada en el mapa dado.
+hasObjectAt p = foldM g h k
+                where g xs [] = any p xs
+                      g _ _ = error "no hay mas camino para recorrer"
+                      h _ [] = False
+                      h r (Straight':ds) = r ds 
+                      h _ _ = error "no hay camino en la direccion indicada"
+                      k xs r1 r2 [] = any p xs
+                      k _ r1 r2 (Left':ds) = r1 ds
+                      k _ r1 r2 (Right':ds) = r2 ds
+                      k _ _ _ _ = error "no hay camino en la direccion indicada"
+
+longestPath :: Mapa a -> [Dir]
+--que describe el camino más largo en el mapa dado.
+longestPath = foldM (\xs -> []) (\r -> Straight' : r) (\xs r1 r2 -> if length r1 > length r2 then Left' : r1 else Right' : r2)
+
+objectsOfLongestPath :: Mapa a -> [a]
+--que describe la lista con los objetos presentes en el camino más largo del mapa dado.
+objectsOfLongestPath = recM id (\mp r -> r) (\xs mp1 mp2 r1 r2 -> if length (longestPath mp1) > length (longestPath mp2) then xs ++ r1 else xs ++ r2)
+
+allPaths :: Mapa a -> [[Dir]]
+--que describe la lista con todos los caminos del mapa dado.
+allPaths = foldM (\xs -> [[]]) (\r -> map (Straight':) r) (\xs r1 r2 -> (map (Left':) r1) ++ (map (Right':)r2))
+
+objectsPerLevel :: Mapa a -> [[a]]
+--que describe la lista con todos los objetos por niveles del mapa dado.
+objectsPerLevel = foldM (\xs -> [xs]) (\r -> []:r) (\xs r1 r2 -> xs : concatenarNiveles r1 r2)
