@@ -3,6 +3,7 @@ module Pf11 where
 import Pf10
 import Pf09
 import Pf07
+import Pf03 hiding (flip)
 
 --Ejercicio 1) Definir las siguientes funciones utilizando recursión estructural explícita sobre Pizza:
 --(Capa (Aceitunas 9) (Capa Queso (Capa Salsa (Capa Jamon (Capa Queso Prepizza))))

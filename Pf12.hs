@@ -1,5 +1,6 @@
 module Pf12 where
 
+import Pf11 hiding (length, zipWith, map, any, sum)
 import Pf09
 import Pf08
 import Pf03
@@ -290,7 +291,7 @@ objects = foldM id id (\xs r1 r2 -> xs ++ r1 ++ r2)
 
 mapM :: (a -> b) -> Mapa a -> Mapa b
 --que transforma los objetos del mapa dado aplicando la función dada.
-mapM f = foldM (Cofre . (map f)) id (\xs r1 r2 -> Bifurcacion (map f xs) r1 r2)  
+mapM f = foldM (Cofre . (map f)) (Nada . id) (\xs r1 r2 -> Bifurcacion (map f xs) r1 r2)  
 
 has :: (a -> Bool) -> Mapa a -> Bool
 --que indica si existe algún objeto que cumpla con la condición dada en el mapa dado.
@@ -300,14 +301,14 @@ hasObjectAt :: (a->Bool) -> Mapa a -> [Dir] -> Bool
 --que indica si un objeto al final del camino dado cumple con la condición dada en el mapa dado.
 hasObjectAt p = foldM g h k
                 where g xs [] = any p xs
-                      g _ _ = error "no hay mas camino para recorrer"
+                      g _ _ = False
                       h _ [] = False
                       h r (Straight':ds) = r ds 
-                      h _ _ = error "no hay camino en la direccion indicada"
+                      h _ _ = False
                       k xs r1 r2 [] = any p xs
                       k _ r1 r2 (Left':ds) = r1 ds
                       k _ r1 r2 (Right':ds) = r2 ds
-                      k _ _ _ _ = error "no hay camino en la direccion indicada"
+                      k _ _ _ _ = False
 
 longestPath :: Mapa a -> [Dir]
 --que describe el camino más largo en el mapa dado.
@@ -324,3 +325,86 @@ allPaths = foldM (\xs -> [[]]) (\r -> map (Straight':) r) (\xs r1 r2 -> (map (Le
 objectsPerLevel :: Mapa a -> [[a]]
 --que describe la lista con todos los objetos por niveles del mapa dado.
 objectsPerLevel = foldM (\xs -> [xs]) (\r -> []:r) (\xs r1 r2 -> xs : concatenarNiveles r1 r2)
+
+--ejercicio 7)
+
+data GTree a = GNode a [GTree a] deriving Show
+
+{--(GNode 8 [GNode 5 [], GNode 4 [GNode 404 [GNode 4000 []]], GNode 3 [GNode 300 []], GNode 2 [GNode 200 [GNode 2000 [], GNode 2001 []]], GNode 1 [], GNode 0 [GNode 10 []]]) 
+(GNode 18 [GNode 43 [GNode 4504 []], GNode 364 [GNode 30640 []], GNode 2 [GNode 200 [GNode 82000 [], GNode 62001 []]], GNode 1 [], GNode 0 []])
+--}
+foldGT0 :: (a -> [b] -> b) -> GTree a -> b
+foldGT0 h (GNode x ts) = h x (map (foldGT0 h) ts) 
+
+foldGT :: (a -> c -> b) -> ([b] -> c) -> GTree a -> b
+foldGT g k (GNode x ts) = g x (k (map (foldGT g k) ts))
+
+foldGT1 :: (a -> c -> b) -> (b -> c -> c) -> c -> GTree a -> b
+foldGT1 g f z (GNode x ts) = g x (foldr f z (map (foldGT1 g f z) ts))
+
+
+recGT0 :: (a -> [GTree a] -> [b] -> b) -> GTree a -> b
+recGT0 h (GNode x ts) = h x ts (map (recGT0 h) ts) 
+
+recGT :: (a -> [GTree a] -> c -> b) -> ([b] -> c) -> GTree a -> b
+recGT g k (GNode x ts) = g x ts (k (map (recGT g k) ts))
+
+recGT1 :: (a -> [GTree a] -> c -> b) -> (b -> c -> c) -> c -> GTree a -> b
+recGT1 g f z (GNode x ts) = g x ts (foldr f z (map (recGT1 g f z) ts))
+
+mapGT :: (a -> b) -> GTree a -> GTree b
+mapGT f = foldGT (GNode . f) id
+
+sumGT :: GTree Int -> Int
+sumGT = foldGT (+) sum
+
+sizeGT :: GTree a -> Int
+sizeGT = foldGT (const (1 +)) sum   
+
+heightGT :: GTree a -> Int
+heightGT = foldGT (const (1 +)) (\xs -> if null xs then 0 else maximum xs)
+
+preOrderGT :: GTree a -> [a]
+preOrderGT = foldGT (:) concat'
+
+postOrderGT :: GTree a -> [a]
+postOrderGT = foldGT (\x r -> r ++ [x]) concat' 
+
+mirrorGT :: GTree a -> GTree a
+mirrorGT = foldGT GNode reverse
+
+countByGT :: (a -> Bool) -> GTree a -> Int
+countByGT p  = foldGT (\x r -> if p x then 1 + r else r) sum 
+
+partitionGT :: (a -> Bool) -> GTree a -> ([a], [a])
+partitionGT p = foldGT (\x r -> if p x then (x : fst r, snd r) else (fst r, x : snd r)) (\xs -> juntarListasDeParesGT xs)
+
+juntarListasDeParesGT :: [([a], [a])] -> ([a], [a])
+juntarListasDeParesGT [] = ([], [])
+juntarListasDeParesGT ((xs, ys):ps) = appFork (((++) xs . fst), ((++) ys . snd)) (juntarListasDeParesGT ps)   
+
+zipWithGT :: (a->b->c) -> GTree a -> GTree b -> GTree c
+zipWithGT f = foldGT g (\r gs -> zipWith' apply r gs)
+               where g x r (GNode y gs) = GNode (f x y) (r gs)  
+
+{--zipWithGT f = foldGT g (\r ->  )
+               where g x r (GNode y []) = GNode (f x y) []
+                     g x r (GNode y (gt:gts)) = GNode (f x y) r gts
+fromJust :: Maybe a -> a
+fromJust Nothing = error "algo malo paso"
+fromJust (Just x) = x
+
+caminoMasLargoGT :: GTree a -> [a]
+caminoMasLargoGT = foldGT (\x r -> x : r) (\tss -> fromJust . find (((==) (maximum (map length tss))) . length) tss)
+--}
+todosLosCaminosGT :: GTree a -> [[a]]
+todosLosCaminosGT = undefined
+
+todosLosNivelesGT :: GTree a -> [[a]]
+todosLosNivelesGT = undefined
+
+caminoHastaGT :: Eq a => a -> GTree a -> [a]
+caminoHastaGT = undefined
+
+nivelNGT :: GTree a -> Int -> [a]
+nivelNGT = undefined
