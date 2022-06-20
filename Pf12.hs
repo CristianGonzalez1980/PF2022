@@ -408,3 +408,115 @@ caminoHastaGT = undefined
 
 nivelNGT :: GTree a -> Int -> [a]
 nivelNGT = undefined
+
+---------------------------------------------------------------------------
+
+type Name = String
+
+type Content = String
+
+type Path = [Name]
+
+data FileSystem = File Name Content
+                | Folder Name [FileSystem] deriving Show    
+{--
+(Folder "C" [(Folder "kikito" [
+                               (Folder "Docs" [
+                                             (File "PF01" "practica..."),
+                                             (File "PF02" "practica..."),
+                                             (File "DiapoPF" "teoria...")
+                                              ]
+                               ), 
+                               (File "UNQ" "OfertaAcademica..."), 
+                               (Folder "Musica" [
+                                                (File "Alanis" "YourHouse..."),
+                                                (Folder "Rem" [
+                                                              (File "OutOfTime" "LosingMyReligion...")
+                                                              ])
+                                                ]
+                                ),
+                               (File "Juegos" "AOD...")
+                              ])
+            ]
+)
+
+(Folder "C" [(Folder "kikito" [(Folder "Docs" [(File "PF01" "practica..."), (File "PF02" "practica..."), (File "DiapoPF" "teoria...")]), (File "UNQ" "OfertaAcademica..."), (Folder "Musica" [(File "Alanis" "YourHouse..."), (Folder "Rem" [(File "OutOfTime" "LosingMyReligion...")])]), (File "Juegos" "AOD...")])])
+
+--}
+foldFS :: (Name -> Content -> b) -> (Name -> c -> b) -> ([b] -> c) -> FileSystem -> b 
+foldFS f g h (File n c) = f n c 
+foldFS f g h (Folder n fs) = g n (h (map (foldFS f g h) fs)) 
+
+recFS :: (Name -> Content -> b) -> (Name -> [FileSystem] -> c -> b) -> ([b] -> c) -> FileSystem -> b 
+recFS f g h (File n c) = f n c
+recFS f g h (Folder n fs) = g n fs (h (map (recFS f g h) fs)) 
+
+amountOfFiles :: FileSystem -> Int
+--que describe la cantidad de archivos en el filesystem dado.
+amountOfFiles = foldFS (\n c -> 1) (\n r -> r) (\fs -> sum fs)
+
+find :: Name -> FileSystem -> Maybe Content
+--que describe el contenido del archivo con el nombre dado en el filesystem dado.
+find name = foldFS (\n c -> if name == n then Just c else Nothing) (\n r -> r) (\fs -> if all'' (\mc -> isNothing mc) fs then Nothing else giveMC fs)
+
+isNothing :: Maybe Content -> Bool
+isNothing Nothing = True
+isNothing _ = False
+
+giveMC :: [Maybe Content] -> Maybe Content
+giveMC [mc] = mc
+giveMC (mc:mcs) = if isNothing mc then giveMC mcs else mc 
+
+pathOf :: Name -> FileSystem -> Path
+--que describe la ruta desde la raiz hasta el nombre dado en el filesystem dado.  Precondición: el nombre existe en el filesystem.
+pathOf name = foldFS (\n c -> if name == n then [name] else []) (\n r -> if name == n then [name] else pathIf n r) (\xs -> pathHastaName xs)
+
+pathIf :: Name -> [Name] -> [Name]
+pathIf n [] = []
+pathIf n ns = n : ns
+
+pathHastaName :: [[Name]] -> [Name]
+pathHastaName [ln] = ln
+pathHastaName (ns:nss) = if null ns then pathHastaName nss else ns
+
+mapContents :: (Content -> Content) -> FileSystem -> FileSystem
+--que describe el filesystem resultante de transformar todos los archivos en el filesystem dado aplicando la función dada.
+mapContents f = foldFS (\n c -> File n (f c)) (\n r -> Folder n r) id
+
+targetedMapContents :: [(Name, Content -> Content)] -> FileSystem -> FileSystem
+--que describe el filesystem resultante de transformar el filesystem dado aplicando la función asociada a cada archivo en la lista dada.
+targetedMapContents lf = foldFS (\n c -> File n (appFunCorrespondiente lf n c)) (\n r -> Folder n r) id
+
+appFunCorrespondiente :: [(Name, Content -> Content)] -> Name -> Content -> Content
+appFunCorrespondiente [] n c = c
+appFunCorrespondiente (f:fs) n c = if fst f == n then snd f c else appFunCorrespondiente fs n c  
+
+--funciones de prueba
+upper :: Char -> Char
+upper 'a' = 'A'
+upper 'b' = 'B'
+upper 'c' = 'C'
+upper 'd' = 'D'
+upper 'e' = 'E'
+upper 'f' = 'F'
+upper 'g' = 'G'
+upper 'h' = 'H'
+upper 'i' = 'I'
+upper 'j' = 'J'
+upper 'k' = 'K'
+upper 'l' = 'L'
+upper 'm' = 'M'
+upper 'n' = 'N'
+upper 'o' = 'O'
+upper 'p' = 'P'
+upper 'q' = 'Q'
+upper 'r' = 'R'
+upper 's' = 'S'
+upper 't' = 'T'
+upper 'u' = 'U'
+upper 'v' = 'V'
+upper 'w' = 'W'
+upper 'x' = 'X'
+upper 'y' = 'Y'
+upper 'z' = 'Z'
+upper c = c

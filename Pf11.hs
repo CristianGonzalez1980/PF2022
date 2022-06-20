@@ -160,8 +160,8 @@ find f = foldr (\x b -> if f x then Just x
 any :: (a -> Bool) -> [a] -> Bool
 any f = foldr (\x b -> f x || b) False
 
-all :: (a -> Bool) -> [a] -> Bool
-all f = foldr (\x b -> f x && b) True
+all'' :: (a -> Bool) -> [a] -> Bool
+all'' f = foldr (\x b -> f x && b) True
 
 countBy :: (a -> Bool) -> [a] -> Int
 countBy f = foldr (\x b -> if f x then succ b
