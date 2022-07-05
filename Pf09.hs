@@ -310,7 +310,13 @@ compress (LeafQ color) = LeafQ color
 compress (NodeQ (LeafQ c1) (LeafQ c2) (LeafQ c3) (LeafQ c4)) = if (hojasIguales c1 c2 c3 c4) 
                                                                 then LeafQ c1 
                                                                 else (NodeQ (LeafQ c1) (LeafQ c2) (LeafQ c3) (LeafQ c4))    
-compress (NodeQ q1 q2 q3 q4) = NodeQ (compress q1) (compress q2) (compress q3) (compress q4) 
+compress (NodeQ q1 q2 q3 q4) = if (faltaComprimir (NodeQ (compress q1) (compress q2) (compress q3) (compress q4))) 
+                                  then compress q1
+                                   else (NodeQ (compress q1) (compress q2) (compress q3) (compress q4))  
+
+faltaComprimir :: QuadTree Color -> Bool
+faltaComprimir (NodeQ (LeafQ c1) (LeafQ c2) (LeafQ c3) (LeafQ c4)) = hojasIguales c1 c2 c3 c4
+faltaComprimir _ = False
 
 hojasIguales :: Color -> Color -> Color -> Color -> Bool
 hojasIguales (RGB c1 c2 c3) (RGB c4 c5 c6) (RGB c7 c8 c9) (RGB  c10 c11 c12) = numerosIguales c1 c4 c7 c10 
@@ -319,11 +325,51 @@ hojasIguales (RGB c1 c2 c3) (RGB c4 c5 c6) (RGB c7 c8 c9) (RGB  c10 c11 c12) = n
 numerosIguales :: Int -> Int -> Int -> Int -> Bool   
 numerosIguales n1 n2 n3 n4 = n1 == n2 && n2 == n3 && n3 == n4
 {--
+
+compress' ::  QuadTree Color -> QuadTree Color
+compress' (LeafQ color) = leafQ color
+compress' (NodeQ q1 q2 q3 q4) = if q1 `equalQ` q2 `equalQ` q3 `equalQ` q4
+                                   then Leaf (elem q1)
+                                   else Node Q (compress' q1) (compress' q2) (compress' q3) (compress' q4)
+
+equalQ (Leaf x) (Leaf y) = x == y
+equalQ (NodeQ q11 q12 q13 q14) (NodeQ q21 q22 q23 q24) = q11 `equalQ` q21 && q12 `equalQ` q22 && q13 `equalQ` q23 && q14 `equalQ` q24
+equalQ _ _  = False
+
+elemQ :: QuadTree Color -> Color
+elemQ (LeafQ c1) = c1
+elemQ (NodeQ q1 q2 q3 q4) = elemQ q1
+
 uncompress :: QuadTree a -> QuadTree a--, que describe el árbol resultante de transformar en nodo (manteniendo el dato de la
 --hoja correspondiente) todas aquellas hojas que no se encuentren en el nivel de la altura del árbol.
 uncompress (LeafQ a) = LeafQ a 
 uncompress (NodeQ q1 q2 q3 q4) = uncompress q1 uncompress q2 uncompress q3 uncompress q4 
 
+
+uncompress' :: QuadTree a -> QuadTree a
+uncompress' (LeafQ a) = LeafQ a
+uncompress' (NodeQ q1 q2 q3 q4) = 
+    where hm = heightQT qr1 `max` heightQT qr2 `max` heightQT qr3 `max` heightQT qr4
+         qr1 = uncompress q1
+         qr2 = uncompress q2
+         qr3 = uncompress q3
+         qr4 = uncompress q4
+         qr1' = if heightQT qr1 < hm then expandir hm qr1 else qr1
+         qr2' = if heightQT qr2 < hm then expandir hm qr2 else qr2
+         qr3' = if heightQT qr3 < hm then expandir hm qr3 else qr3
+         qr4' = if heightQT qr4 < hm then expandir hm qr4 else qr4
+
+expandir 0 q = q
+expandir h (Leaf x) =
+    NodeQ (expandir (h-1) (Leaf x))
+          (expandir (h-1) (Leaf x))
+          (expandir (h-1) (Leaf x))
+          (expandir (h-1) (Leaf x))
+expandir h (NodeQ q1 q2 q3 q4) =
+    NodeQ (expandir (h-1) q1)
+          (expandir (h-1) q2)
+          (expandir (h-1) q3)
+          (expandir (h-1) q4)
 
 render :: Image -> Int -> Image--, que describe la imagen dada en el tamaño dado.
 --Precondición: el tamaño dado es potencia de 4 y su raíz cuarta es mayor o igual a la altura del árbol dado.
@@ -331,4 +377,19 @@ render :: Image -> Int -> Image--, que describe la imagen dada en el tamaño dad
 --AYUDA: Esta operación es similar a uncompress, pero pudiendo variar la altura del árbol
 f (LeafQ a) = b 
 f (NodeQ q1 q2 q3 q4) = f q1 f q2 f q3 f q4 
+
+render' :: Image -> Int -> Image
+render' q 0 = q
+render' (LeafQ x) n = 
+    NodeQ
+     (render (LeafQ x) (n-1))
+     (render (LeafQ x) (n-1))
+     (render (LeafQ x) (n-1))
+     (render (LeafQ x) (n-1))
+render (NodeQ q1 q2 q3 q4) n =
+    NodeQ
+     (render q1 (n-1))
+     (render q2 (n-1))
+     (render q3 (n-1))
+     (render q4 (n-1))
 --}

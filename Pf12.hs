@@ -210,6 +210,10 @@ type Record a b = [(a,b)]
 
 type Table a b = [ Record a b ]
 
+{--
+[[("a",2),("b",5),("c",3),("d",7),("e",9),("f",2),("g",9),("h",1),("i",0)], [("a",64),("b",65),("c",32),("d",77),("e",98),("f",02),("g",39),("h",18),("i",30)]]
+--}
+
 
 select :: (Record a b -> Bool) -> Table a b -> Table a b
 --que a partir de la lista de registros dada describe la lista de los registros que cumplen con la condición dada.
@@ -234,12 +238,19 @@ conjunct p q = subst ((&&) . p)  q
 
 crossWith :: (a -> b -> c) -> [a] -> [b] -> [c]
 --que describe el resultado de aplicar una función a cada elemento del producto cartesiano de las dos listas de registros dadas.
-crossWith p = zipWith p
+crossWith f = recr (\ys -> []) (\x xs r ys -> appllyUnoConTodos f x ys ++ r ys)
+
+appllyUnoConTodos ::(a -> b -> c) -> a -> [b] -> [c]
+appllyUnoConTodos f x [] = []
+appllyUnoConTodos f x (y:ys) = f x y : appllyUnoConTodos f x ys
+
+--crossWith p = zipWith p
 
 product :: Table a b -> Table a b -> Table a b
 --que describe la lista de registros resultante del producto cartesiano combinado de las dos
 --listas de registros dadas. Es decir la unión de los campos en los registros del producto cartesiano.
-product = undefined
+product = undefined 
+
 {--
 similar :: Record a b -> Record a b
 --que describe el registro resultante de descartar datos cuyos campos sean iguales (o sea, el mismo dato asociado al mismo campo).
